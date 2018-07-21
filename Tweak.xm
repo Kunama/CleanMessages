@@ -1,6 +1,6 @@
 @interface SBLockScreenViewControllerBase : UIViewController
 @end
-%hook SBLockScreenViewControllerBase
+%hook CKConversationListCell
 - (void)viewDidLoad {
     %orig;	
     //New code

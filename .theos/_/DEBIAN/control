@@ -1,0 +1,10 @@
+Package: com.hinduhustle.cleanmessages
+Name: Clean Messages
+Depends: mobilesubstrate
+Architecture: iphoneos-arm
+Description: An awesome MobileSubstrate tweak!
+Maintainer: HinduHustle
+Author: HinduHustle
+Section: Tweaks
+Version: 0.0.1-1+debug
+Installed-Size: 120
