@@ -1,8 +1,13 @@
 #import "forwardDeclarations.h"
-#import <libcolorpicker.h>
+// #import <libcolorpicker.h>
+// #import <UIKit/UIKit.h> 
 #define kBundlePath @"/Library/Application Support/CleanMessages/CleanMessagesBundle.bundle"
-
+#define UIColorFromRGB(rgbHex) [UIColor colorWithRed:((float)((rgbHex & 0xFF0000) >> 16))/255.0 green:((float)((rgbHex & 0xFF00) >> 8))/255.0 blue:((float)(rgbHex & 0xFF))/255.0 alpha:1.0]
+// #import "cleanMessagesColors.h"
 static CKUITheme *cleanMessages;
+// static UIColor *bgColor;
+
+
 
 %hook CKUIBehavior
 - (id)theme {
@@ -70,14 +75,41 @@ static CKUITheme *cleanMessages;
 	return [UIColor colorWithRed:1 green:1 blue:1 alpha:9];
 }
 %end
+// %hook UILayoutContainerView
+// -(void)setFrame:(CGRect)arg1{
+// 	self.backgroundColor = [UIColor whiteColor];
+// }
+// %end
 
 %hook CKGradientReferenceView
-NSBundle *CleanMessagesAssets = [[NSBundle alloc] initWithPath:kBundlePath];
+//NSBundle *CleanMessagesAssets = [[NSBundle alloc] initWithPath:kBundlePath];
 // NSArray *imageNameArray = [[NSArray alloc] initWithObjects:@"1.png", @"2.png", @"3.png", @"4.png", @"5.png", nil];
 // UIImage *gradientIm = 
  
 -(void)setFrame:(CGRect)arg1{
-	self.backgroundColor = [UIColor colorWithPatternImage:[UIImage imageNamed:@"1" inBundle:CleanMessagesAssets compatibleWithTraitCollection:nil]];
+	CGRect screenRect = [[UIScreen mainScreen] bounds];
+	CGFloat screenWidth = screenRect.size.width;
+	CGFloat screenHeight = screenRect.size.height;
+	CGSize size = CGSizeMake(screenWidth, screenHeight);
+	CAGradientLayer *layer = [CAGradientLayer layer];
+	layer.frame = CGRectMake(0, 0, size.width, size.height);
+	layer.colors = @[(__bridge id) UIColorFromRGB(0x12c2e9).CGColor,  // start color
+					(__bridge id) UIColorFromRGB(0xc471ed).CGColor,
+					(__bridge id) UIColorFromRGB(0xf64f59).CGColor]; // end color
+	layer.startPoint = CGPointZero;
+	layer.endPoint = CGPointMake(.3, 1);
+	UIGraphicsBeginImageContext(size);
+	@try {
+	[layer renderInContext:UIGraphicsGetCurrentContext()];
+	// UIImage *backgroundImage = UIGraphicsGetImageFromCurrentImageContext();
+	UIColor *bgColor = [UIColor colorWithPatternImage:UIGraphicsGetImageFromCurrentImageContext()];
+	self.backgroundColor = bgColor;
+	// self.backgroundColor = bgColor;//[UIImage imageNamed:@"1" inBundle:CleanMessagesAssets compatibleWithTraitCollection:nil]];
+
+	} @finally {
+	UIGraphicsEndImageContext();
+	}
+	
 	
 	%orig;
 }
@@ -137,7 +169,7 @@ NSBundle *CleanMessagesAssets = [[NSBundle alloc] initWithPath:kBundlePath];
 // 	}
 
 -(double)_backgroundOpacity{
-	return 0.5;
+	return 0.8;
 }
 // #define BACKGROUNDCOLOR 
 // #define IMESSAGEBUBBLE [UIColor colorWithRed:0.49 green:0.73 blue:0.83 alpha:1.0]
@@ -146,11 +178,36 @@ NSBundle *CleanMessagesAssets = [[NSBundle alloc] initWithPath:kBundlePath];
 -(void)layoutSubviews{
 	%orig;
 	[self setTranslucent:NO];
-	[self setBarTintColor:[UIColor colorWithPatternImage:[UIImage imageNamed:@"1" inBundle:CleanMessagesAssets compatibleWithTraitCollection:nil]]];
+
+
+	CGRect screenRect = [[UIScreen mainScreen] bounds];
+	CGFloat screenWidth = screenRect.size.width;
+	CGFloat screenHeight = screenRect.size.height;
+	CGSize size = CGSizeMake(screenWidth, screenHeight);
+	CAGradientLayer *layer = [CAGradientLayer layer];
+	layer.frame = CGRectMake(0, 0, size.width, size.height);
+	layer.colors = @[(__bridge id) UIColorFromRGB(0x12c2e9).CGColor,  // start color
+					(__bridge id) UIColorFromRGB(0xc471ed).CGColor,
+					(__bridge id) UIColorFromRGB(0xf64f59).CGColor]; // end color
+	layer.startPoint = CGPointZero;
+	layer.endPoint = CGPointMake(.3, 1);
+	UIGraphicsBeginImageContext(size);
+	@try {
+	[layer renderInContext:UIGraphicsGetCurrentContext()];
+	// UIImage *backgroundImage = UIGraphicsGetImageFromCurrentImageContext();
+	UIColor *bgColor = [UIColor colorWithPatternImage:UIGraphicsGetImageFromCurrentImageContext()];
+	// self.backgroundColor = bgColor;//[UIImage imageNamed:@"1" inBundle:CleanMessagesAssets compatibleWithTraitCollection:nil]];
+	[self setBarTintColor:bgColor];
+	} @finally {
+	UIGraphicsEndImageContext();
+	}
+
+
+	//[UIColor colorWithPatternImage:[UIImage imageNamed:@"1" inBundle:CleanMessagesAssets compatibleWithTraitCollection:nil]]];
 	// [self setTintColor:SMSBUBBLE];
 	
 	self.titleTextAttributes = @{NSForegroundColorAttributeName: [UIColor whiteColor], NSFontAttributeName:[UIFont fontWithName:@"Futura-Medium" size:15.5f]};
-	[self setBarStyle:1];
+	[self setBarStyle:0];
 }
 
 
@@ -163,20 +220,44 @@ NSBundle *CleanMessagesAssets = [[NSBundle alloc] initWithPath:kBundlePath];
 // }
 
 %end
-%hook CKMessageEntryView
--(UIColor *)ckTintColor {
-	// UIColor *tintColor = %orig;
-	// if([self.superview isKindOfClass:NSClassFromString(@"CKMessageEntryView")] || [self.superview.superview isKindOfClass:NSClassFromString(@"CKMessageEntryView")] || [self.superview.superview.superview isKindOfClass:NSClassFromString(@"CKMessageEntryView")]){
-	return [UIColor colorWithRed:1 green:0 blue:0 alpha:1.0];
-	// }
-	// return %orig;
 
+%hook CKEntryViewButton
+
+-(UIColor *)ckTintColor {
+    UIColor *tintColor = %orig;
+    if(([self.superview isKindOfClass:NSClassFromString(@"CKMessageEntryView")] || [self.superview.superview isKindOfClass:NSClassFromString(@"CKMessageEntryView")] || [self.superview.superview.superview isKindOfClass:NSClassFromString(@"CKMessageEntryView")])){
+        return [UIColor colorWithRed:1 green:0 blue:0 alpha:1.0];
+    }
+    return tintColor;
 }
+
 -(void)setCkTintColor:(UIColor *)tintColor {
-	%orig([UIColor colorWithRed:1 green:0 blue:0 alpha:1.0]);
+    if(([self.superview isKindOfClass:NSClassFromString(@"CKMessageEntryView")] || [self.superview.superview isKindOfClass:NSClassFromString(@"CKMessageEntryView")] || [self.superview.superview.superview isKindOfClass:NSClassFromString(@"CKMessageEntryView")])){
+        %orig([UIColor colorWithRed:1 green:0 blue:0 alpha:1.0]);
+    } else {
+        %orig;
+    }
 }
+
+%end
+
+%hook CKMessageEntryView
+// -(UIColor *)ckTintColor {
+// 	UIColor *tintColor = [UIColor colorWithRed:1 green:0 blue:0 alpha:1.0];
+// 	// if([self.superview isKindOfClass:NSClassFromString(@"CKMessageEntryView")] || [self.superview.superview isKindOfClass:NSClassFromString(@"CKMessageEntryView")] || [self.superview.superview.superview isKindOfClass:NSClassFromString(@"CKMessageEntryView")]){
+// 	return tintColor;
+// 	// }
+// 	// return %orig;
+
+// }
+
+
+
+// -(void)setCkTintColor:(UIColor *)tintColor {
+// 	%orig([UIColor colorWithRed:1 green:0 blue:0 alpha:1.0]);
+// }
 -(void)setShouldHideBackgroundView:(BOOL)arg1{
-	arg1=true;
+	arg1=false;
 	%orig;
 }
 - (void)updateEntryView {
@@ -184,9 +265,76 @@ NSBundle *CleanMessagesAssets = [[NSBundle alloc] initWithPath:kBundlePath];
 	%orig;
 	self.browserButton.hidden = YES;
 	self.audioButton.hidden = YES;
+	self.arrowButton.hidden = NO;
+	self.sendButton.hidden = NO;
+	CGRect screenRect = [[UIScreen mainScreen] bounds];
+	CGFloat screenWidth = screenRect.size.width;
+	CGFloat screenHeight = screenRect.size.height;
+	CGSize size = CGSizeMake(screenWidth, screenHeight);
+	CAGradientLayer *layer = [CAGradientLayer layer];
+	layer.frame = CGRectMake(0, 0, size.width, size.height);
+	layer.colors = @[(__bridge id) UIColorFromRGB(0x12c2e9).CGColor,  // start color
+					(__bridge id) UIColorFromRGB(0xc471ed).CGColor,
+					(__bridge id) UIColorFromRGB(0xf64f59).CGColor]; // end color
+	layer.startPoint = CGPointZero;
+	layer.endPoint = CGPointMake(.3, 1);
+	UIGraphicsBeginImageContext(size);
+	@try {
+	[layer renderInContext:UIGraphicsGetCurrentContext()];
+	// UIImage *backgroundImage = UIGraphicsGetImageFromCurrentImageContext();
+	UIColor *bgColor = [UIColor colorWithPatternImage:UIGraphicsGetImageFromCurrentImageContext()];
+	// self.backgroundColor = bgColor;//[UIImage imageNamed:@"1" inBundle:CleanMessagesAssets compatibleWithTraitCollection:nil]];
+	self.backgroundColor=bgColor;
+	} @finally {
+	UIGraphicsEndImageContext();
+	}
+	//MSHookIvar<UIView *>(self, "_grayscaleTintView").backgroundColor = [UIColor redColor];
+	
+
 	// self.photoButton.ckTintColor = [UIColor colorWithRed:1 green:0 blue:0 alpha:1.0];
 }
 %end
+
+static UILabel *contactName;
+
+%hook CKAvatarContactNameCollectionReusableView
+
+-(void)layoutSubviews {
+    contactName = MSHookIvar<UILabel *>(self, "_titleLabel");
+    %orig;
+}
+
+%end
+
+%hook CKMessageEntryContentView
+
+-(void)setPlaceholderText:(NSString *)arg1 {
+    if (contactName != nil) {
+        %orig(contactName.text);
+    } else {
+        %orig;
+    }
+}
+
+%end
+//Hide Avatar in NavigationBar
+// %hook CKAvatarNavigationBar
+// -(void)layoutSubviews{
+//     %orig;
+//     self.backgroundColor = [UIColor clearColor];
+// }
+// %end
+
+%hook CKMessageEntryContentView  
+-(void)layoutSubviews
+{ 
+	%orig; 
+	self.backgroundColor = [UIColor redColor]; 
+} 
+%end
+
+
+
 %ctor {
 	//NSLog(@"%@", imagePath);
 	@autoreleasepool {
